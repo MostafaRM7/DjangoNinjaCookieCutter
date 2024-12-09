@@ -2,3 +2,6 @@ venv
 db.sqlite3
 .idea
 .vscode
+/migrations/*
+!/migrations/__init__.py
+.env
