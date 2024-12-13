@@ -26,6 +26,4 @@ def retrieve_user_id_with_otp(otp):
 
 
 def validate_reset_password(new_password, new_password_repeat):
-    if new_password == new_password_repeat:
-        return True
-    return False
+    return new_password == new_password_repeat

@@ -3,11 +3,30 @@ from django.shortcuts import get_object_or_404
 from ninja import Router
 from ninja_jwt.tokens import RefreshToken
 
-from user.ninja_api.schemas import TokenPairSchema, RequestRestPasswordSchema, LoginSchema, ResetPasswordSchema
+from user.api.exceptions import (
+    USER_EXISTS,
+    INVLAID_CREDENTIALS,
+    INVALID_PASSWORD,
+    WRONG_OTP,
+)
+from user.api.schemas.auth_schemas import TokenPairSchema, RequestRestPasswordSchema, LoginSchema, ResetPasswordSchema, \
+    SignUpSchema
 from user.utils.auth import get_tokens_for_user, get_access_with_refresh, retrieve_user_id_with_otp, \
     validate_reset_password
 
 auth_router = Router()
+
+
+@auth_router.post("signup/", response={200: TokenPairSchema, 422: dict}, auth=None)
+def signup(request, payload: SignUpSchema):
+    username = payload.username
+    password = payload.password
+    email = payload.email
+    user_exists = get_user_model().objects.filter(username=username).exists()
+    if user_exists:
+        return USER_EXISTS
+    user = get_user_model().objects.create_user(username=username, password=password, email=email)
+    return get_tokens_for_user(user)
 
 
 @auth_router.post("/login", response={200: TokenPairSchema, 422: dict}, auth=None)
@@ -16,7 +35,7 @@ def login(request, payload: LoginSchema):
     password = payload.password
     user = get_object_or_404(get_user_model(), username=username)
     if not user.check_password(password):
-        return 422, {"message": "Invalid credentials"}
+        return INVLAID_CREDENTIALS
     return get_tokens_for_user(user)
 
 
@@ -63,5 +82,5 @@ def reset_password(request, payload: ResetPasswordSchema):
                 user.save()
                 return 200, {"message": "New password set sucssessfuly"}
             else:
-                return 422, {"message": "Invalid password"}
-    return 422, {"message": "Wrong OTP"}
+                return INVALID_PASSWORD
+    return WRONG_OTP

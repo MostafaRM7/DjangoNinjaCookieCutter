@@ -130,3 +130,4 @@ USER_RESET_PASSWORD_OTP_TIMEOUT = 5 * 60
 
 from DjangoNinja.config.jwt import *
 from DjangoNinja.config.cache import *
+from DjangoNinja.config.pagination import *
