@@ -2,6 +2,8 @@ from typing import List
 
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
+from ninja import Form
+from ninja.files import UploadedFile
 from ninja.pagination import RouterPaginated
 
 from DjangoNinja.permissions import guard
@@ -32,9 +34,9 @@ def retrieve_user(request, user_id: int):
 
 @user_router.post("/users", response={200: UserOutSchema, 422: dict, 403: dict})
 @guard([user_list_create_permission])
-def create_user(request, payload: UserInSchema):
+def create_user(request, payload: Form[UserInSchema], avatar: UploadedFile = None):
     user_exists = get_user_model().objects.filter(username=payload.username).exists()
     if user_exists:
         return USER_EXISTS
-    user = get_user_model().objects.create_user(**payload.dict())
+    user = get_user_model().objects.create_user(**payload.dict(), avatar=avatar)
     return user
