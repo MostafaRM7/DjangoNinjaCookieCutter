@@ -6,7 +6,9 @@ from ninja import Form
 from ninja.files import UploadedFile
 from ninja.pagination import RouterPaginated
 
+from DjangoNinja.enums import FileFormat
 from DjangoNinja.permissions import guard
+from DjangoNinja.utils import file_format_validator
 from user.api.exceptions import USER_EXISTS
 from user.api.permissions.user_permissions import user_list_create_permission, user_detail_permission
 from user.api.schemas.user_schemas import UserOutSchema, UserInSchema
@@ -38,5 +40,6 @@ def create_user(request, payload: Form[UserInSchema], avatar: UploadedFile = Non
     user_exists = get_user_model().objects.filter(username=payload.username).exists()
     if user_exists:
         return USER_EXISTS
-    user = get_user_model().objects.create_user(**payload.dict(), avatar=avatar)
+    is_avatar_valid = file_format_validator(avatar, FileFormat().image())
+    user = get_user_model().objects.create_user(**payload.dict(), avatar=avatar if is_avatar_valid else None)
     return user
